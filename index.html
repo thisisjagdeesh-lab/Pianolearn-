@@ -1,23 +1,520 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PianoLearn</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PianoLearn 🎹 by Jagdish Rajput</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #fdf6ee; color: #3b2f2f; min-height: 100vh; }
+
+  nav { background: #fff7f0; border-bottom: 2px solid #f0d9c0; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 1.5rem; font-weight: 800; color: #c0603a; }
+  .logo span { color: #e8a87c; }
+  nav ul { list-style: none; display: flex; gap: 28px; }
+  nav ul a { text-decoration: none; color: #7a5c4f; font-weight: 500; transition: color .2s; }
+  nav ul a:hover { color: #c0603a; }
+
+  .hero { text-align: center; padding: 50px 20px 30px; }
+  .hero h1 { font-size: 2.6rem; font-weight: 900; color: #3b2f2f; line-height: 1.2; }
+  .hero h1 span { color: #c0603a; }
+  .hero p { margin-top: 12px; color: #7a5c4f; font-size: 1.05rem; max-width: 500px; margin-inline: auto; }
+
+  .search-wrap { margin: 28px auto 0; max-width: 580px; display: flex; gap: 10px; padding: 0 20px; }
+  .search-wrap input { flex: 1; padding: 13px 20px; border-radius: 50px; border: 2px solid #f0d9c0; background: #fff; font-size: 1rem; outline: none; color: #3b2f2f; transition: border .2s; }
+  .search-wrap input:focus { border-color: #e8a87c; }
+  .search-wrap button { padding: 13px 26px; background: #c0603a; color: #fff; border: none; border-radius: 50px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background .2s; white-space: nowrap; }
+  .search-wrap button:hover { background: #a34e2f; }
+  .search-wrap button:disabled { background: #d9a98a; cursor: not-allowed; }
+
+  .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 16px auto 0; max-width: 640px; padding: 0 20px; }
+  .suggestions button { padding: 6px 15px; background: #fff3eb; border: 1.5px solid #f0d9c0; border-radius: 50px; font-size: 0.83rem; color: #7a5c4f; cursor: pointer; transition: all .2s; }
+  .suggestions button:hover { background: #ffe4cc; border-color: #e8a87c; }
+
+  #status { text-align: center; margin-top: 12px; font-size: 0.95rem; color: #c0603a; min-height: 22px; font-weight: 500; }
+
+  .main-layout { display: flex; gap: 24px; max-width: 1200px; margin: 20px auto 0; padding: 0 24px; align-items: flex-start; }
+
+  .lyrics-panel { width: 300px; flex-shrink: 0; background: #fff7f0; border: 2px solid #f0d9c0; border-radius: 20px; padding: 20px; display: none; }
+  .lyrics-panel h3 { font-size: 1rem; color: #c0603a; margin-bottom: 14px; font-weight: 700; }
+  .lyric-line { padding: 10px 14px; border-radius: 12px; cursor: pointer; margin-bottom: 6px; border: 1.5px solid transparent; transition: all .2s; font-size: 0.9rem; color: #7a5c4f; line-height: 1.4; }
+  .lyric-line:hover { background: #ffe4cc; border-color: #e8a87c; }
+  .lyric-line.active { background: #c0603a; color: #fff; border-color: #c0603a; font-weight: 600; }
+  .lyric-line.done { color: #c0a080; text-decoration: line-through; }
+  .lyrics-hint { font-size: 0.75rem; color: #b08070; margin-top: 10px; text-align: center; }
+
+  .right-side { flex: 1; min-width: 0; }
+
+  .guide-panel { background: #fff7f0; border: 2px solid #f0d9c0; border-radius: 20px; padding: 18px 24px; display: none; margin-bottom: 20px; }
+  .guide-panel h3 { font-size: 1.05rem; color: #c0603a; margin-bottom: 10px; font-weight: 700; }
+  .progress-bar-wrap { background: #f0d9c0; border-radius: 50px; height: 8px; margin-bottom: 14px; }
+  .progress-bar-fill { height: 8px; background: #c0603a; border-radius: 50px; transition: width .3s; }
+  .current-line-label { font-size: 0.8rem; color: #b08070; margin-bottom: 8px; text-align: center; }
+  .current-lyric-text { text-align: center; font-size: 1rem; font-weight: 600; color: #3b2f2f; background: #fff3eb; border-radius: 10px; padding: 8px 14px; margin-bottom: 12px; }
+  .current-lyric-text span { color: #c0603a; }
+  .note-display { display: flex; gap: 14px; align-items: center; justify-content: center; }
+  .note-box .label { font-size: 0.72rem; color: #b08070; margin-bottom: 4px; text-align: center; }
+  .note-box .note { padding: 10px 24px; border-radius: 12px; font-size: 1.5rem; font-weight: 900; min-width: 76px; text-align: center; }
+  .note-now { background: #c0603a; color: #fff; }
+  .note-next { background: #f0d9c0; color: #7a5c4f; }
+  .guide-hint { text-align: center; margin-top: 10px; font-size: 0.78rem; color: #b08070; }
+  .controls-row { display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .ctrl-btn { padding: 8px 18px; border-radius: 50px; border: none; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .ctrl-btn.primary { background: #c0603a; color: #fff; }
+  .ctrl-btn.primary:hover { background: #a34e2f; }
+  .ctrl-btn.secondary { background: #f0d9c0; color: #7a5c4f; }
+  .ctrl-btn.secondary:hover { background: #e8c8a0; }
+  .ctrl-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .done-msg { text-align: center; font-size: 1.05rem; font-weight: 700; color: #c0603a; padding: 8px 0; }
+
+  .piano-section { display: flex; justify-content: center; margin-bottom: 50px; }
+  .piano-wrap { background: #5a3e2b; padding: 16px 16px 22px; border-radius: 18px; box-shadow: 0 10px 36px rgba(0,0,0,0.28); display: inline-block; }
+  .keys { position: relative; display: flex; user-select: none; }
+  .white-key { width: 58px; height: 200px; background: #fffdf8; border: 1.5px solid #c9b89a; border-radius: 0 0 9px 9px; cursor: pointer; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 10px; transition: background .1s; }
+  .white-key:hover { background: #fff3e0; }
+  .white-key.active { background: #f4c98e; border-color: #c0603a; }
+  .white-key.highlight { background: #ffe0cc; border-color: #c0603a; box-shadow: 0 0 0 3px #c0603a44 inset; }
+  .white-key .kb { font-size: 0.72rem; font-weight: 700; color: #a0806a; margin-bottom: 2px; }
+  .white-key .nn { font-size: 0.58rem; color: #c0a080; }
+  .black-key { position: absolute; width: 38px; height: 126px; background: #2a1a0e; border-radius: 0 0 7px 7px; z-index: 2; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 9px; box-shadow: 2px 4px 8px rgba(0,0,0,0.5); transition: background .1s; }
+  .black-key:hover { background: #3d2a14; }
+  .black-key.active { background: #b05020; }
+  .black-key.highlight { background: #c0603a; box-shadow: 0 0 0 3px #ff9966 inset; }
+  .black-key .kb { font-size: 0.62rem; font-weight: 700; color: #d0a080; margin-bottom: 1px; }
+  .black-key .nn { font-size: 0.52rem; color: #a07050; }
+
+  /* FEEDBACK SECTION */
+  .feedback-section { background: #fff7f0; border-top: 2px solid #f0d9c0; padding: 60px 24px 40px; }
+  .feedback-inner { max-width: 860px; margin: 0 auto; }
+  .feedback-inner h2 { text-align: center; font-size: 2rem; font-weight: 900; color: #3b2f2f; margin-bottom: 6px; }
+  .feedback-inner h2 span { color: #c0603a; }
+  .feedback-inner .subtitle { text-align: center; color: #7a5c4f; font-size: 0.95rem; margin-bottom: 36px; }
+
+  .feedback-form { background: #fff; border: 2px solid #f0d9c0; border-radius: 20px; padding: 28px 32px; margin-bottom: 40px; }
+  .form-row { display: flex; gap: 14px; margin-bottom: 14px; }
+  .form-row input, .feedback-form textarea {
+    width: 100%; padding: 12px 16px; border: 1.5px solid #f0d9c0; border-radius: 12px;
+    font-size: 0.92rem; font-family: inherit; color: #3b2f2f; background: #fdf6ee;
+    outline: none; transition: border .2s; resize: none;
+  }
+  .form-row input:focus, .feedback-form textarea:focus { border-color: #e8a87c; background: #fff; }
+  .star-row { display: flex; gap: 6px; margin-bottom: 14px; align-items: center; }
+  .star-row span { font-size: 0.88rem; color: #7a5c4f; margin-right: 6px; }
+  .star { font-size: 1.6rem; cursor: pointer; transition: transform .1s; line-height: 1; }
+  .star:hover, .star.selected { transform: scale(1.2); }
+  .submit-btn { width: 100%; padding: 13px; background: #c0603a; color: #fff; border: none; border-radius: 50px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background .2s; margin-top: 4px; }
+  .submit-btn:hover { background: #a34e2f; }
+
+  .reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .review-card { background: #fff; border: 1.5px solid #f0d9c0; border-radius: 16px; padding: 18px 20px; }
+  .review-card .rc-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: #c0603a; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; flex-shrink: 0; }
+  .rc-info .name { font-weight: 700; color: #3b2f2f; font-size: 0.92rem; }
+  .rc-info .stars { font-size: 0.85rem; letter-spacing: 1px; }
+  .review-card p { font-size: 0.88rem; color: #7a5c4f; line-height: 1.5; }
+  .review-card .rc-date { font-size: 0.72rem; color: #c0a080; margin-top: 8px; }
+  .no-reviews { text-align: center; color: #b08070; font-size: 0.9rem; padding: 20px 0; }
+
+  /* FOOTER */
+  footer { background: #3b2f2f; color: #d0b8a8; padding: 36px 40px 24px; }
+  .footer-inner { max-width: 1000px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 24px; }
+  .footer-brand .logo-ft { font-size: 1.4rem; font-weight: 900; color: #e8a87c; margin-bottom: 6px; }
+  .footer-brand p { font-size: 0.82rem; color: #a08070; max-width: 240px; line-height: 1.5; }
+  .footer-creator { text-align: right; }
+  .footer-creator .made-by { font-size: 0.78rem; color: #a08070; margin-bottom: 4px; }
+  .footer-creator .creator-name { font-size: 1.1rem; font-weight: 800; color: #e8a87c; }
+  .footer-creator .creator-title { font-size: 0.76rem; color: #a08070; margin-top: 2px; }
+  .footer-bottom { text-align: center; border-top: 1px solid #5a4a3a; margin-top: 28px; padding-top: 18px; font-size: 0.78rem; color: #7a6050; }
+
+  @media (max-width: 800px) {
+    .main-layout { flex-direction: column; }
+    .lyrics-panel { width: 100%; }
+    .form-row { flex-direction: column; }
+    .footer-creator { text-align: left; }
+  }
+</style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to PianoLearn</h1>
-    </header>
-    <main>
-        <section>
-            <h2>Learn the Piano</h2>
-            <p>Your journey to learn the piano starts here!</p>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2026 PianoLearn. All rights reserved.</p>
-    </footer>
+
+<nav>
+  <div class="logo">Piano<span>Learn</span> 🎹</div>
+  <ul>
+    <li><a href="#">Home</a></li>
+    <li><a href="#">Songs</a></li>
+    <li><a href="#feedback-section">Feedback</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <h1>Learn Any Song on<br/><span>Piano</span> — Step by Step</h1>
+  <p>Search a song, see the lyrics, and follow along note by note.</p>
+</section>
+
+<div class="search-wrap">
+  <input id="songInput" type="text" placeholder="Search a song e.g. Happy Birthday, Jingle Bells…" />
+  <button id="searchBtn" onclick="searchSong()">Learn It</button>
+</div>
+
+<div class="suggestions">
+  <button onclick="quickSearch('Happy Birthday')">🎂 Happy Birthday</button>
+  <button onclick="quickSearch('Carol of the Bells')">🔔 Carol of the Bells</button>
+  <button onclick="quickSearch('Twinkle Twinkle')">⭐ Twinkle Twinkle</button>
+  <button onclick="quickSearch('Jingle Bells')">🎄 Jingle Bells</button>
+  <button onclick="quickSearch('Fur Elise')">🎵 Für Elise</button>
+  <button onclick="quickSearch('Amazing Grace')">🙏 Amazing Grace</button>
+</div>
+
+<div id="status"></div>
+
+<div class="main-layout">
+  <div class="lyrics-panel" id="lyricsPanel">
+    <h3>📜 Lyrics</h3>
+    <div id="lyricsList"></div>
+    <div class="lyrics-hint">Tap any line to jump to it</div>
+  </div>
+  <div class="right-side">
+    <div class="guide-panel" id="guidePanel">
+      <h3 id="songTitle">🎵 Song</h3>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progFill" style="width:0%"></div></div>
+      <div class="current-line-label" id="lineLabel"></div>
+      <div class="current-lyric-text" id="lyricDisplay" style="display:none"></div>
+      <div id="guideContent"></div>
+      <div class="controls-row">
+        <button class="ctrl-btn primary" id="autoBtn" onclick="autoPlay()">▶ Auto Play</button>
+        <button class="ctrl-btn secondary" onclick="resetSong()">↺ Restart</button>
+      </div>
+    </div>
+    <div class="piano-section">
+      <div class="piano-wrap">
+        <div class="keys" id="pianoKeys"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEEDBACK SECTION -->
+<section class="feedback-section" id="feedback-section">
+  <div class="feedback-inner">
+    <h2>Share Your <span>Thoughts</span> 💬</h2>
+    <p class="subtitle">Loved it? Have suggestions? We'd love to hear from you!</p>
+
+    <div class="feedback-form">
+      <div class="form-row">
+        <input type="text" id="reviewName" placeholder="Your name" maxlength="40" />
+        <input type="text" id="reviewSong" placeholder="Song you tried (optional)" maxlength="60" />
+      </div>
+      <div class="star-row">
+        <span>Rate your experience:</span>
+        <span class="star" data-v="1" onclick="setRating(1)">☆</span>
+        <span class="star" data-v="2" onclick="setRating(2)">☆</span>
+        <span class="star" data-v="3" onclick="setRating(3)">☆</span>
+        <span class="star" data-v="4" onclick="setRating(4)">☆</span>
+        <span class="star" data-v="5" onclick="setRating(5)">☆</span>
+      </div>
+      <textarea id="reviewText" rows="4" placeholder="Tell us what you liked, what could be better, or how your piano learning journey is going…"></textarea>
+      <button class="submit-btn" onclick="submitReview()">Submit My Thoughts 🎹</button>
+    </div>
+
+    <div class="reviews-grid" id="reviewsGrid"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo-ft">PianoLearn 🎹</div>
+      <p>Making piano learning joyful, accessible, and fun for everyone — one note at a time.</p>
+    </div>
+    <div class="footer-creator">
+      <div class="made-by">✨ Designed & Created by</div>
+      <div class="creator-name">Jagdish Rajput</div>
+      <div class="creator-title">Music & Technology Enthusiast</div>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2025 PianoLearn by Jagdish Rajput · Built with passion for music learners everywhere 🎵</div>
+</footer>
+
+<script>
+// ── PIANO ENGINE ──────────────────────────────────────────────
+const NOTE_FREQ = {
+  'C4':261.63,'C#4':277.18,'D4':293.66,'D#4':311.13,'E4':329.63,
+  'F4':349.23,'F#4':369.99,'G4':392.00,'G#4':415.30,'A4':440.00,
+  'A#4':466.16,'B4':493.88,'C5':523.25,'C#5':554.37,'D5':587.33,
+  'D#5':622.25,'E5':659.25,'F5':698.46,'F#5':739.99,'G5':783.99
+};
+const KEY_MAP = {
+  'a':'C4','w':'C#4','s':'D4','e':'D#4','d':'E4','f':'F4','t':'F#4',
+  'g':'G4','y':'G#4','h':'A4','u':'A#4','j':'B4','k':'C5','o':'C#5',
+  'l':'D5','p':'D#5',';':'E5',"'":"F5"
+};
+const WHITE_KEYS = [
+  {note:'C4',kb:'A'},{note:'D4',kb:'S'},{note:'E4',kb:'D'},
+  {note:'F4',kb:'F'},{note:'G4',kb:'G'},{note:'A4',kb:'H'},
+  {note:'B4',kb:'J'},{note:'C5',kb:'K'},{note:'D5',kb:'L'},
+  {note:'E5',kb:';'},{note:'F5',kb:"'"}
+];
+const BLACK_KEYS = [
+  {note:'C#4',kb:'W',after:'C4'},{note:'D#4',kb:'E',after:'D4'},
+  {note:'F#4',kb:'T',after:'F4'},{note:'G#4',kb:'Y',after:'G4'},
+  {note:'A#4',kb:'U',after:'A4'},{note:'C#5',kb:'O',after:'C5'},
+  {note:'D#5',kb:'P',after:'D5'}
+];
+
+let audioCtx=null, songData=null, currentLine=0, currentNoteIdx=0;
+let isAutoPlaying=false, autoTimeouts=[], guideMode=false;
+
+function getAudio(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playTone(freq,dur=0.5){
+  const ctx=getAudio(),osc=ctx.createOscillator(),gain=ctx.createGain();
+  osc.connect(gain);gain.connect(ctx.destination);
+  osc.type='triangle';osc.frequency.setValueAtTime(freq,ctx.currentTime);
+  gain.gain.setValueAtTime(0,ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.28,ctx.currentTime+0.02);
+  gain.gain.linearRampToValueAtTime(0.18,ctx.currentTime+dur*0.7);
+  gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+  osc.start(ctx.currentTime);osc.stop(ctx.currentTime+dur);
+}
+function flashKey(note,dur){
+  const el=document.getElementById('key-'+note.replace('#','s'));
+  if(!el)return;el.classList.add('active');
+  setTimeout(()=>el.classList.remove('active'),dur*1000);
+}
+function highlightKey(note){
+  document.querySelectorAll('.white-key,.black-key').forEach(el=>el.classList.remove('highlight'));
+  if(!note)return;
+  const el=document.getElementById('key-'+note.replace('#','s'));
+  if(el)el.classList.add('highlight');
+}
+function playNote(note,dur=0.6){
+  const freq=NOTE_FREQ[note];if(!freq)return;
+  playTone(freq,dur);flashKey(note,dur);
+}
+
+function buildPiano(){
+  const container=document.getElementById('pianoKeys');
+  container.style.position='relative';
+  const whiteRow=document.createElement('div');
+  whiteRow.style.display='flex';
+  WHITE_KEYS.forEach(k=>{
+    const el=document.createElement('div');
+    el.className='white-key';el.id='key-'+k.note.replace('#','s');
+    el.innerHTML=`<span class="kb">${k.kb}</span><span class="nn">${k.note}</span>`;
+    el.addEventListener('mousedown',()=>{if(guideMode)advanceGuide();else playNote(k.note);});
+    whiteRow.appendChild(el);
+  });
+  container.appendChild(whiteRow);
+  const blackLayer=document.createElement('div');
+  blackLayer.style.cssText='position:absolute;top:0;left:0;width:100%;height:0;';
+  BLACK_KEYS.forEach(k=>{
+    const idx=WHITE_KEYS.findIndex(w=>w.note===k.after);if(idx<0)return;
+    const el=document.createElement('div');
+    el.className='black-key';el.id='key-'+k.note.replace('#','s');
+    el.style.left=((idx+1)*58-21)+'px';
+    el.innerHTML=`<span class="kb">${k.kb}</span><span class="nn">${k.note}</span>`;
+    el.addEventListener('mousedown',e=>{e.stopPropagation();if(guideMode)advanceGuide();else playNote(k.note);});
+    blackLayer.appendChild(el);
+  });
+  container.appendChild(blackLayer);
+}
+
+// ── SONG LOADING ──────────────────────────────────────────────
+function setStatus(msg){document.getElementById('status').textContent=msg;}
+
+async function searchSong(){
+  const input=document.getElementById('songInput').value.trim();
+  if(!input)return;await loadSong(input);
+}
+function quickSearch(name){document.getElementById('songInput').value=name;loadSong(name);}
+
+async function loadSong(name){
+  resetSong();guideMode=false;
+  setStatus('🎵 Loading "'+name+'"…');
+  document.getElementById('searchBtn').disabled=true;
+  const prompt=`Create a piano learning guide for "${name}". Split the song into lyric lines. For each line provide the melody notes. Use ONLY: C4 C#4 D4 D#4 E4 F4 F#4 G4 G#4 A4 A#4 B4 C5 C#5 D5 D#5 E5 F5 F#5 G5. Respond ONLY with valid JSON no markdown: {"title":"Song Name","lines":[{"lyric":"First line","notes":[{"note":"C4","duration":0.4}]}]}. Include ALL lines. Each line 4-10 notes. Durations: 0.25 0.4 0.6 1.0. Instrumental: use section names. Only valid JSON.`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const text=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
+    songData=JSON.parse(text);
+    currentLine=0;currentNoteIdx=0;guideMode=true;
+    setStatus('');renderLyrics();showGuide();updateDisplay();
+  }catch(e){setStatus('❌ Couldn\'t load that song. Try another!');console.error(e);}
+  document.getElementById('searchBtn').disabled=false;
+}
+
+function renderLyrics(){
+  const panel=document.getElementById('lyricsPanel'),list=document.getElementById('lyricsList');
+  panel.style.display='block';list.innerHTML='';
+  songData.lines.forEach((line,i)=>{
+    const div=document.createElement('div');
+    div.className='lyric-line'+(i===0?' active':'');
+    div.id='lyric-'+i;div.textContent=line.lyric;
+    div.onclick=()=>jumpToLine(i);list.appendChild(div);
+  });
+}
+function jumpToLine(li){
+  autoTimeouts.forEach(clearTimeout);autoTimeouts=[];
+  isAutoPlaying=false;document.getElementById('autoBtn').disabled=false;
+  currentLine=li;currentNoteIdx=0;guideMode=true;
+  updateLyricHighlights();updateDisplay();
+}
+function updateLyricHighlights(){
+  songData.lines.forEach((_,i)=>{
+    const el=document.getElementById('lyric-'+i);if(!el)return;
+    el.classList.remove('active','done');
+    if(i<currentLine)el.classList.add('done');
+    else if(i===currentLine)el.classList.add('active');
+  });
+  const active=document.getElementById('lyric-'+currentLine);
+  if(active)active.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function showGuide(){
+  document.getElementById('guidePanel').style.display='block';
+  document.getElementById('songTitle').textContent='🎵 '+songData.title;
+  document.getElementById('lyricDisplay').style.display='block';
+}
+function getTotalNotes(){return songData.lines.reduce((s,l)=>s+l.notes.length,0);}
+function getPlayedNotes(){
+  let p=0;for(let i=0;i<currentLine;i++)p+=songData.lines[i].notes.length;
+  return p+currentNoteIdx;
+}
+function updateDisplay(){
+  document.getElementById('progFill').style.width=Math.round(getPlayedNotes()/getTotalNotes()*100)+'%';
+  if(currentLine>=songData.lines.length){
+    document.getElementById('guideContent').innerHTML='<div class="done-msg">🎉 You finished the whole song!</div>';
+    document.getElementById('lyricDisplay').textContent='';
+    document.getElementById('lineLabel').textContent='';
+    highlightKey(null);return;
+  }
+  let line=songData.lines[currentLine];
+  if(currentNoteIdx>=line.notes.length){
+    currentLine++;currentNoteIdx=0;
+    if(currentLine>=songData.lines.length){updateDisplay();return;}
+    updateLyricHighlights();line=songData.lines[currentLine];
+  }
+  const cur=line.notes[currentNoteIdx];
+  const nxt=line.notes[currentNoteIdx+1]||(songData.lines[currentLine+1]?songData.lines[currentLine+1].notes[0]:null);
+  const words=line.lyric.split(' ');
+  const wi=Math.floor((currentNoteIdx/line.notes.length)*words.length);
+  document.getElementById('lyricDisplay').innerHTML=words.map((w,i)=>i===wi?`<span>${w}</span>`:w).join(' ');
+  document.getElementById('lineLabel').textContent=`Line ${currentLine+1} of ${songData.lines.length} · Note ${currentNoteIdx+1}/${line.notes.length}`;
+  document.getElementById('guideContent').innerHTML=`
+    <div class="note-display">
+      <div class="note-box"><div class="label">Play now</div><div class="note note-now">${cur.note}</div></div>
+      ${nxt?`<div class="note-box"><div class="label">Then</div><div class="note note-next">${nxt.note}</div></div>`:''}
+    </div>
+    <div class="guide-hint">Press any key or tap the glowing key on the piano ↓</div>`;
+  highlightKey(cur.note);updateLyricHighlights();
+}
+function advanceGuide(){
+  if(!guideMode||isAutoPlaying||currentLine>=songData.lines.length)return;
+  const n=songData.lines[currentLine].notes[currentNoteIdx];
+  playNote(n.note,n.duration);currentNoteIdx++;updateDisplay();
+}
+function autoPlay(){
+  if(isAutoPlaying||!songData)return;
+  isAutoPlaying=true;document.getElementById('autoBtn').disabled=true;
+  currentLine=0;currentNoteIdx=0;updateLyricHighlights();
+  const all=[];
+  songData.lines.forEach((l,li)=>l.notes.forEach((n,ni)=>all.push({...n,li,ni})));
+  let time=0;
+  all.forEach((n,i)=>{
+    const t=setTimeout(()=>{
+      currentLine=n.li;currentNoteIdx=n.ni;
+      playNote(n.note,n.duration);updateDisplay();
+      if(i+1>=all.length)setTimeout(()=>{currentLine=songData.lines.length;updateDisplay();isAutoPlaying=false;document.getElementById('autoBtn').disabled=false;},n.duration*1000+300);
+    },time*1000);
+    autoTimeouts.push(t);time+=n.duration;
+  });
+}
+function resetSong(){
+  autoTimeouts.forEach(clearTimeout);autoTimeouts=[];
+  isAutoPlaying=false;currentLine=0;currentNoteIdx=0;guideMode=false;
+  highlightKey(null);
+  document.getElementById('guidePanel').style.display='none';
+  document.getElementById('lyricsPanel').style.display='none';
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('lyricDisplay').style.display='none';
+  const ab=document.getElementById('autoBtn');if(ab)ab.disabled=false;
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.repeat)return;
+  if(document.activeElement===document.getElementById('songInput'))return;
+  if(guideMode&&!isAutoPlaying&&songData){advanceGuide();return;}
+  const note=KEY_MAP[e.key.toLowerCase()];if(note)playNote(note);
+});
+document.getElementById('songInput').addEventListener('keydown',e=>{if(e.key==='Enter')searchSong();});
+
+// ── REVIEWS ───────────────────────────────────────────────────
+let rating = 0;
+const starColors = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#27ae60'];
+const avatarColors = ['#c0603a','#7a5c4f','#5a8a6a','#7a6aaa','#3a7aaa','#aa6a3a'];
+
+let reviews = [
+  { name:'Priya S.', song:'Twinkle Twinkle', stars:5, text:'This website is absolutely wonderful! I learned Twinkle Twinkle in under 10 minutes. The note highlighting is so intuitive.', date:'March 2025' },
+  { name:'Marco T.', song:'Jingle Bells', stars:5, text:'I always wanted to learn piano but never had time for lessons. PianoLearn makes it so easy — I can jump to exactly the part I want to practice!', date:'February 2025' },
+  { name:'Aisha K.', song:'Für Elise', stars:4, text:'The lyrics + notes side by side is genius. Finally I can connect what I\'m hearing with what I\'m playing. Beautiful design too!', date:'January 2025' },
+];
+
+function setRating(v){
+  rating=v;
+  document.querySelectorAll('.star').forEach((s,i)=>{
+    s.textContent=i<v?'★':'☆';
+    s.style.color=i<v?starColors[v-1]:'#c0a080';
+    s.classList.toggle('selected',i<v);
+  });
+}
+
+function submitReview(){
+  const name=document.getElementById('reviewName').value.trim();
+  const song=document.getElementById('reviewSong').value.trim();
+  const text=document.getElementById('reviewText').value.trim();
+  if(!name){alert('Please enter your name 😊');return;}
+  if(!text){alert('Please share your thoughts!');return;}
+  if(!rating){alert('Please give a star rating ⭐');return;}
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const now=new Date();
+  reviews.unshift({name,song,stars:rating,text,date:months[now.getMonth()]+' '+now.getFullYear()});
+  document.getElementById('reviewName').value='';
+  document.getElementById('reviewSong').value='';
+  document.getElementById('reviewText').value='';
+  setRating(0);
+  renderReviews();
+  document.getElementById('reviewsGrid').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderReviews(){
+  const grid=document.getElementById('reviewsGrid');
+  if(!reviews.length){grid.innerHTML='<div class="no-reviews">No reviews yet — be the first! 🎹</div>';return;}
+  grid.innerHTML=reviews.map(r=>{
+    const initials=r.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const aColor=avatarColors[r.name.charCodeAt(0)%avatarColors.length];
+    const stars='★'.repeat(r.stars)+'☆'.repeat(5-r.stars);
+    const starColor=starColors[r.stars-1]||'#f1c40f';
+    return `<div class="review-card">
+      <div class="rc-top">
+        <div class="avatar" style="background:${aColor}">${initials}</div>
+        <div class="rc-info">
+          <div class="name">${r.name}${r.song?` <span style="font-weight:400;color:#b08070;font-size:0.78rem">· ${r.song}</span>`:''}</div>
+          <div class="stars" style="color:${starColor}">${stars}</div>
+        </div>
+      </div>
+      <p>"${r.text}"</p>
+      <div class="rc-date">${r.date}</div>
+    </div>`;
+  }).join('');
+}
+
+buildPiano();
+renderReviews();
+</script>
 </body>
 </html>
